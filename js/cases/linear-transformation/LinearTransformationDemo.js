@@ -27,7 +27,7 @@ export class LinearTransformationDemo extends IRenderPlugin {
             .case-linear-menu button:hover { background:#8882; }
         `);
         this.content=document.createElement('div'); this.content.className='case-linear-content';
-        this.content.innerHTML='<svg viewBox="-4 -4 8 8" role="img" aria-label="二维线性变换：原图与变换结果，基向量与变换后的基向量"></svg>';
+        this.content.innerHTML='<svg viewBox="-2.5 -2.5 5 5" role="img" aria-label="二维线性变换：原图与变换结果，基向量与变换后的基向量"></svg>';
         document.body.append(this.content); this.svg=this.content.firstElementChild;
         this.slider=new ElasticSliderComponent({isEnabled:()=>this.active && ['geometry','cases'].includes(stateStore.getState('workspace')), onChangeNorm:n=>this.setMatrix(this.rotation(n*360))});
         this.slider.mount(); this.slider.reset(((Math.atan2(this.matrix[2],this.matrix[0])*180/Math.PI+360)%360)/360);
