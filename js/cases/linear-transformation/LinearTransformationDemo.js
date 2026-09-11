@@ -12,8 +12,8 @@ export class LinearTransformationDemo extends IRenderPlugin {
         this.active=true;
         ensureStyle('linear-transformation-case', `
             .case-linear-menu[hidden] { display:none; }
-            .case-linear-content { position:fixed; z-index:5; pointer-events:none; color:var(--text-color); }
-            .case-linear-content svg { width:100%; height:100%; fill:none; stroke-width:.014; overflow:hidden; }
+            .case-linear-content { position:fixed; z-index:5; pointer-events:none; color:var(--text-color); box-sizing:border-box; overflow:hidden; }
+            .case-linear-content svg { display:block; width:100%; height:100%; fill:none; stroke-width:.014; overflow:hidden; }
             .case-linear-content text { font-size:.19px; font-family:serif; }
             .case-linear-controls { position:absolute; bottom:90px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:16px; color:var(--text-color); font:13px var(--font-main, sans-serif); }
             .case-matrix { display:grid; grid-template-columns:16px 96px; gap:4px; align-items:center; }
@@ -25,6 +25,12 @@ export class LinearTransformationDemo extends IRenderPlugin {
             .case-linear-menu { position:absolute; bottom:calc(100% + 8px); padding:8px; min-width:140px; border:1px solid var(--border-color,#d9d0ba); border-radius:8px; background:var(--panel-bg,#fdf6e3); box-shadow:0 8px 24px #0001; }
             .case-linear-menu button { display:block; width:100%; text-align:left; }
             .case-linear-menu button:hover { background:#8882; }
+            @media (max-width:600px) {
+                .case-linear-content { left:12px !important; right:12px; width:auto !important; }
+                .case-linear-controls { gap:4px; font-size:12px; }
+                .case-linear-controls button { padding-inline:4px; }
+                .case-linear-menu { min-width:132px; }
+            }
         `);
         this.content=document.createElement('div'); this.content.className='case-linear-content';
         this.content.innerHTML='<svg viewBox="-3 -3 6 6" role="img" aria-label="二维线性变换：原图与变换结果，基向量与变换后的基向量"></svg>';
@@ -78,12 +84,25 @@ export class LinearTransformationDemo extends IRenderPlugin {
     layout(){
         const sidebar=document.getElementById('ui-overlay')?.getBoundingClientRect();
         const breadcrumb=document.getElementById('breadcrumb-container')?.getBoundingClientRect();
-        const caseLeft=Math.max(24,(sidebar?.right||300)+32);
-        this.slider._root.style.left=`${caseLeft+(innerWidth-caseLeft-48)/2}px`;
-        this.slider._root.style.width=`${Math.max(160,Math.min(430,innerWidth-caseLeft-80))}px`;
+        // #ui-overlay is zero-width in the standalone web build. Falling back
+        // to 300px here shifted the whole stage to the right when no sidebar
+        // was actually present.
+        const sidebarRight=sidebar?.width > 0 ? sidebar.right : 0;
+        const caseLeft=Math.max(24,sidebarRight+32);
+        const right=24;
+        const availableWidth=Math.max(0,innerWidth-caseLeft-right);
+        this.slider._root.style.left=`${caseLeft+availableWidth/2}px`;
+        this.slider._root.style.width=`${Math.max(160,Math.min(430,availableWidth-48))}px`;
         const tray=this.controls.getBoundingClientRect();
-        const left=Math.max(24,(sidebar?.right||300)+32), top=Math.max(96,(breadcrumb?.bottom||64)+32);
-        Object.assign(this.content.style,{left:`${left}px`,top:`${top}px`,width:`${Math.max(80,innerWidth-left-48)}px`,height:`${Math.max(80,tray.top-top-32)}px`});
+        const left=Math.max(24,sidebarRight+32);
+        const top=Math.max(72,(breadcrumb?.bottom || 40)+24);
+        const bottom=Math.min(innerHeight-96, tray.top || innerHeight-96);
+        Object.assign(this.content.style,{
+            left:`${left}px`,
+            top:`${top}px`,
+            width:`${Math.max(80,innerWidth-left-right)}px`,
+            height:`${Math.max(80,bottom-top-24)}px`
+        });
         this.content.hidden=!['geometry','cases'].includes(stateStore.getState('workspace'));
     }
     onDisable(){if(this.showTeaching){eventBus.emit('CASE_TEACHING_INFORMATION',{latex:'',reveal:false});this.showTeaching=false;}this.active=false;cancelAnimationFrame(this.frame);cancelAnimationFrame(this.animation);this.slider?.unmount();if(this.sliderStyle===null)this.slider?._root.removeAttribute("style");else if(this.slider)this.slider._root.setAttribute("style",this.sliderStyle);this.content?.remove();this.controls?.remove();document.removeEventListener('pointerdown',this.closeMenus);document.removeEventListener('keydown',this.closeMenus);}

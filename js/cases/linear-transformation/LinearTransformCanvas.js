@@ -4,14 +4,31 @@ const shape = [[-.9,-1.05],[.9,-1.05],[.9,.25],[0,1.05],[-.9,.25],[-.9,-1.05]];
 const path = (points, matrix=identity) => points.map((p,i) => { const [x,y]=point(matrix,p); return `${i?'L':'M'}${x} ${-y}`; }).join(' ');
 const anniversaryImage = new URL('../../../assets/cases/linear-transformation/anniversary-80.png', import.meta.url).href;
 
+const anniversaryBounds = [[-1.4, -1.07], [1.4, -1.07], [1.4, 1.07], [-1.4, 1.07]];
+
+function boundsFor(points, matrix = identity) {
+    return points.map((p) => point(matrix, p));
+}
+
+function canvasExtent(matrix, originalShape) {
+    const source = originalShape === 'anniversary' ? anniversaryBounds : shape;
+    const points = [...boundsFor(source), ...boundsFor(source, matrix), [0, 0], ...boundsFor([[1, 0], [0, 1]], matrix)];
+    const maxCoordinate = points.reduce((max, [x, y]) => Math.max(max, Math.abs(x), Math.abs(y)), 0);
+
+    // Keep the default framing stable for small transforms, but grow the
+    // mathematical viewport when a transform would otherwise clip the artwork.
+    return Math.max(3, Math.ceil(maxCoordinate + 0.45));
+}
+
 // Conjugate the mathematical transform by the SVG y-axis inversion.
 export function imageTransform([a, b, c, d]) {
     return `matrix(${a} ${-c} ${-b} ${d} 0 0)`;
 }
 
 export function renderCanvas(svg, matrix, grid=false, originalShape='house') {
-    // 网格/坐标轴范围跟随 viewBox，而不是写死 -4~4，避免 viewBox 调整后线条被硬切出界。
-    const vb = (svg.getAttribute('viewBox') || '-4 -4 8 8').trim().split(/\s+/).map(Number);
+    const extent = canvasExtent(matrix, originalShape);
+    svg.setAttribute('viewBox', `${-extent} ${-extent} ${extent * 2} ${extent * 2}`);
+    const vb = (svg.getAttribute('viewBox') || '-3 -3 6 6').trim().split(/\s+/).map(Number);
     const half = vb[2] / 2;
     const n = Math.round(half);
     const line = (p,m=identity,extra='') => `<path d="${path(p,m)}" ${extra}/>`;
