@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>二维线性变换</title>
+<style>
+    :root {
+        --text-color: #1f2430;
+        --border-color: #d9d0ba;
+        --panel-bg: #fdf6e3;
+        --font-main: system-ui, -apple-system, sans-serif;
+    }
+    html, body { margin:0; height:100%; overflow:hidden; }
+    body { background:#f4efe4; font-family:var(--font-main); color:var(--text-color); }
+    /* 布局占位：原版 layout() 以 #ui-overlay 右边作为内容区左边界，给 0 宽使其靠左居中 */
+    #ui-overlay { position:fixed; left:0; top:0; width:0; height:0; }
+    /* 教学信息面板（对应桌面端 KaTeX 渲染区，web 用纯文本） */
+    #teaching {
+        position:fixed; top:16px; right:16px; z-index:20;
+        max-width:280px; padding:12px 14px;
+        background:var(--panel-bg); border:1px solid var(--border-color);
+        border-radius:10px; box-shadow:0 8px 24px #00000014;
+        font-size:14px; line-height:1.6; white-space:pre-line;
+        display:none;
+    }
+    #teaching.show { display:block; }
+</style>
+</head>
+<body>
+<div id="ui-overlay"></div>
+<div id="teaching" role="status"></div>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
